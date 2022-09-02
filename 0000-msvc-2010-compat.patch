@@ -1,0 +1,13 @@
+diff --git a/java/CMakeLists.txt b/java/CMakeLists.txt
+index 87f8ec6c..27dc347c 100644
+--- a/java/CMakeLists.txt
++++ b/java/CMakeLists.txt
+@@ -12,7 +12,7 @@ set(JAVA_CLASSNAMES org/libjpegturbo/turbojpeg/TJ
+   TJExample)
+ 
+ if(MSVC_IDE)
+-  set(OBJDIR "${CMAKE_CURRENT_BINARY_DIR}/$(OutDir)")
++  set(OBJDIR "${CMAKE_CURRENT_BINARY_DIR}/$(CMAKE_CFG_INTDIR)")
+ else()
+   set(OBJDIR ${CMAKE_CURRENT_BINARY_DIR})
+ endif()

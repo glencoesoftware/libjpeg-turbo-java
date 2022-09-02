@@ -62,6 +62,37 @@ jobs:
           name: artifacts-linux-x86_64
           path: libjpeg-turbo/build/.libs/libturbojpeg.so
           if-no-files-found: error
+  build-windows-x86_64:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+      - name: Install NASM
+        uses: ilammy/setup-nasm@v1
+      - name: Apply patches
+        run: |
+          cd libjpeg-turbo
+          git apply ..\0000-msvc-2010-compat.patch
+      - name: Build native code
+        run: |
+          cd libjpeg-turbo
+          mkdir build
+          cd build
+          cmake -DWITH_JAVA=ON ..
+          cmake --build .
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: artifacts-windows-x86_64
+          path: libjpeg-turbo/build/**/turbojpeg.dll
+          if-no-files-found: error
   release:
     if: startsWith(github.ref, 'refs/tags')
     needs: build-macos-x86_64
