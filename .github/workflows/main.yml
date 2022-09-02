@@ -1,0 +1,78 @@
+---
+name: Build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-macos-x86_64:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+      - name: Install build dependencies
+        run: brew install automake libtool nasm
+      - name: Build native code
+        run: |
+          export CPPFLAGS="-I${JAVA_HOME}/include -I${JAVA_HOME}/include/darwin"
+          cd libjpeg-turbo
+          autoreconf -fiv
+          mkdir build
+          cd build
+          ../configure --with-java
+          make
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: configure log
+          path: libjpeg-turbo/build/config.log
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: artifacts-macos-x86_64
+          path: libjpeg-turbo/build/.libs/libturbojpeg.dylib
+          if-no-files-found: error
+  build-linux-x86_64:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Build native code
+        run: |
+          docker build -f Dockerfile2010 . -t native_builder
+          docker run -v $(pwd):/build --user ${UID} -t native_builder /build/linux.sh
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: configure log
+          path: libjpeg-turbo/build/config.log
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: artifacts-linux-x86_64
+          path: libjpeg-turbo/build/.libs/libturbojpeg.so
+          if-no-files-found: error
+  release:
+    if: startsWith(github.ref, 'refs/tags')
+    needs: build-macos-x86_64
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts from build
+        uses: actions/download-artifact@v2
+      - name: List artifacts
+        run: ls -R
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/*.whl
