@@ -26,7 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.libjpegturbo.turbojpeg;
+package com.glencoesoftware.turbojpeg;
 
 /**
  * TurboJPEG lossless transformer

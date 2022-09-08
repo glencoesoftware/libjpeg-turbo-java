@@ -26,7 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.libjpegturbo.turbojpeg;
+package com.glencoesoftware.turbojpeg;
 
 import java.awt.*;
 import java.nio.*;

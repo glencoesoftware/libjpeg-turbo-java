@@ -26,10 +26,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.libjpegturbo.turbojpeg;
+package com.glencoesoftware.turbojpeg;
 
 final class TJLoader {
   static void load() {
-    System.loadLibrary("turbojpeg");
+    // don't use System.loadLibrary(...), since this won't
+    // try to load native libraries from a packed jar
+    //System.loadLibrary("turbojpeg");
   }
 };
