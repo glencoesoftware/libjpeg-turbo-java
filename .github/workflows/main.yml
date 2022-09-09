@@ -94,7 +94,7 @@ jobs:
           path: libjpeg-turbo/build/**/turbojpeg.dll
           if-no-files-found: error
   build-package:
-    needs: build-macos-x86_64, build-windows-x86_64, build-linux-x86_64
+    needs: [build-macos-x86_64, build-windows-x86_64, build-linux-x86_64]
     runs-on: ubuntu-latest
     env:
       gradle_commands: --stacktrace clean build
