@@ -93,6 +93,27 @@ jobs:
           name: artifacts-windows-x86_64
           path: libjpeg-turbo/build/**/turbojpeg.dll
           if-no-files-found: error
+  build-package:
+    needs: build-macos-x86_64, build-windows-x86_64, build-linux-x86_64
+    runs-on: ubuntu-latest
+    env:
+      gradle_commands: --stacktrace clean build
+    steps:
+      - name: Run commands
+        run: |
+          ./gradlew ${{ env.gradle_commands }}
+      - name: Download artifacts from build
+        uses: actions/download-artifact@v2
+      - name: List artifacts
+        run: ls -R
+      - name: Repack jar
+        run: ./jar-pack.sh
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: libjpeg-turbo-java
+          path: build/libs/*.jar
+
   release:
     if: startsWith(github.ref, 'refs/tags')
     needs: build-macos-x86_64
