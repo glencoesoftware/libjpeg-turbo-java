@@ -26,7 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.glencoesoftware.turbojpeg;
+package org.libjpegturbo.turbojpeg;
 
 final class TJLoader {
   static void load() {
