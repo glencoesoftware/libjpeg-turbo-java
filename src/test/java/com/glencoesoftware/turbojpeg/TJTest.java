@@ -5,6 +5,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.scijava.nativelib.NativeLibraryUtil;
+import org.libjpegturbo.turbojpeg.TJ;
+import org.libjpegturbo.turbojpeg.TJDecompressor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
