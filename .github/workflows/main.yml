@@ -137,7 +137,7 @@ jobs:
       - name: Download artifacts from build
         uses: actions/download-artifact@v2
       - name: Move packed jar to build dir
-        run: mv libjpeg-turbo*.jar build/libs/
+        run: mv libjpeg-turbo-java/libjpeg-turbo*.jar build/libs/
       - name: Run tests
         run: |
           ./gradlew ${{ env.test_commands }}
