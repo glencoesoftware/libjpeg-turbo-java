@@ -93,6 +93,55 @@ jobs:
           name: artifacts-windows-x86_64
           path: libjpeg-turbo/build/**/turbojpeg.dll
           if-no-files-found: error
+  build-package:
+    needs: [build-macos-x86_64, build-windows-x86_64, build-linux-x86_64]
+    runs-on: ubuntu-latest
+    env:
+      gradle_commands: --stacktrace clean jar
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v1
+        with:
+          java-version: '8'
+      - name: Run commands
+        run: |
+          ./gradlew ${{ env.gradle_commands }}
+      - name: Download artifacts from build
+        uses: actions/download-artifact@v2
+      - name: List artifacts
+        run: ls -R
+      - name: Repack jar
+        run: ./jar-pack.sh
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: libjpeg-turbo-java
+          path: build/libs/*.jar
+  test:
+    needs: build-package
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      gradle_commands: --stacktrace clean jar
+      test_commands: --stacktrace test
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v1
+        with:
+          java-version: '8'
+      - name: Run commands
+        run: |
+          ./gradlew ${{ env.gradle_commands }}
+      - name: Download artifacts from build
+        uses: actions/download-artifact@v2
+      - name: Move packed jar to build dir
+        run: rm build/libs/libjpeg-turbo*.jar; mv libjpeg-turbo-java/libjpeg-turbo*.jar build/libs/
+      - name: Run tests
+        run: |
+          ./gradlew ${{ env.test_commands }}
+
   release:
     if: startsWith(github.ref, 'refs/tags')
     needs: build-macos-x86_64

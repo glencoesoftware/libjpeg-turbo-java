@@ -1,0 +1,48 @@
+plugins {
+    id 'java'
+}
+
+group = 'com.glencoesoftware.turbojpeg'
+version = '0.1.0-SNAPSHOT'
+
+def mainClassName = 'com.glencoesoftware.turbojpeg.TJ'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    testImplementation "org.scijava:native-lib-loader:2.1.4"
+    testRuntimeOnly "org.slf4j:slf4j-api:1.7.6"
+
+    // https://github.com/junit-team/junit5-samples/blob/master/junit5-migration-gradle/build.gradle
+    def junitVintageVersion  = '5.7.0'
+    def junitJupiterVersion  = '5.7.0'
+    def junitPlatformVersion = '1.7.0'
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher:${junitPlatformVersion}"
+
+    // https://stackoverflow.com/questions/45462987/junit5-with-intellij-and-gradle
+    testImplementation "org.junit.jupiter:junit-jupiter-params:${junitJupiterVersion}"
+}
+
+jar {
+    manifest {
+        attributes(
+            "Main-Class": mainClassName,
+            "Implementation-Version": version
+        )
+    }
+}
+
+test {
+    useJUnitPlatform()
+
+    classpath = files("${buildDir}/libs/libjpeg-turbo-java-${version}.jar") + classpath
+}
+
+
