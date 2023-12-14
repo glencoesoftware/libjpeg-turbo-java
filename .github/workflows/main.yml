@@ -62,6 +62,27 @@ jobs:
           name: artifacts-linux-x86_64
           path: libjpeg-turbo/build/.libs/libturbojpeg.so
           if-no-files-found: error
+  build-linux-x86_64:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Build native code
+        run: |
+          ./winarm64-xcompile-on-unix.sh
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: configure log
+          path: libjpeg-turbo/build/config.log
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: artifacts-linux-x86_64
+          path: libjpeg-turbo/build_winarm/.libs/libturbojpeg.dll
+          if-no-files-found: error
   build-windows-x86_64:
     runs-on: windows-latest
     steps:
