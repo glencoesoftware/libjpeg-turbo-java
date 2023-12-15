@@ -69,8 +69,9 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: recursive
-      - name: Build native code
+      - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v2
+      - name: Build native code
         run: |
           ./winarm64-xcompile-on-unix.sh
       - uses: actions/upload-artifact@v3
