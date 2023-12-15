@@ -62,6 +62,29 @@ jobs:
           name: artifacts-linux-x86_64
           path: libjpeg-turbo/build/.libs/libturbojpeg.so
           if-no-files-found: error
+  build-windows-arm64-xcompile-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@v2
+      - name: Build native code
+        run: |
+          ./winarm64-xcompile-on-unix.sh
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: configure log
+          path: libjpeg-turbo/build/config.log
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: artifacts-windows-arm64
+          path: libjpeg-turbo/build_winarm/.libs/libturbojpeg-arm64.dll
+          if-no-files-found: error
   build-windows-x86_64:
     runs-on: windows-latest
     steps:
@@ -94,7 +117,7 @@ jobs:
           path: libjpeg-turbo/build/**/turbojpeg.dll
           if-no-files-found: error
   build-package:
-    needs: [build-macos-x86_64, build-windows-x86_64, build-linux-x86_64]
+    needs: [build-macos-x86_64, build-windows-x86_64, build-linux-x86_64, build-windows-x86_64]
     runs-on: ubuntu-latest
     env:
       gradle_commands: --stacktrace clean jar
@@ -157,5 +180,6 @@ jobs:
           files: |
             artifacts-macos-x86_64/*.dylib
             artifacts-linux-x86_64/*.so
+            artifacts-windows-arm64/*.dll
             artifacts-windows-x86_64/Debug/*.dll
             libjpeg-turbo-java/*.jar
