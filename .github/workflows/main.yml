@@ -62,7 +62,7 @@ jobs:
           name: artifacts-linux-x86_64
           path: libjpeg-turbo/build/.libs/libturbojpeg.so
           if-no-files-found: error
-  build-linux-x86_64-2:
+  build-windows-arm64-xcompile-linux:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository and submodules
@@ -82,8 +82,8 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: artifacts-linux-x86_64
-          path: libjpeg-turbo/build_winarm/.libs/libturbojpeg.dll
+          name: artifacts-windows-arm64
+          path: libjpeg-turbo/build_winarm/.libs/libturbojpeg-arm64.dll
           if-no-files-found: error
   build-windows-x86_64:
     runs-on: windows-latest
@@ -117,7 +117,7 @@ jobs:
           path: libjpeg-turbo/build/**/turbojpeg.dll
           if-no-files-found: error
   build-package:
-    needs: [build-macos-x86_64, build-windows-x86_64, build-linux-x86_64]
+    needs: [build-macos-x86_64, build-windows-x86_64, build-linux-x86_64, build-windows-x86_64]
     runs-on: ubuntu-latest
     env:
       gradle_commands: --stacktrace clean jar
@@ -180,5 +180,6 @@ jobs:
           files: |
             artifacts-macos-x86_64/*.dylib
             artifacts-linux-x86_64/*.so
+            artifacts-windows-arm64/*.dll
             artifacts-windows-x86_64/Debug/*.dll
             libjpeg-turbo-java/*.jar

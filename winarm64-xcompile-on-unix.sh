@@ -17,5 +17,5 @@ mkdir build_winarm
 cd build_winarm
 ../configure --with-java --host aarch64-windows
 make
-zig cc -target aarch64-windows .libs/libturbojpeg.a -shared -o .libs/libturbojpeg.dll
+zig cc -target aarch64-windows .libs/libturbojpeg.a -shared -o .libs/libturbojpeg-arm64.dll
 
