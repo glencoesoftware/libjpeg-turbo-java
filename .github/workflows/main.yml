@@ -70,6 +70,7 @@ jobs:
         with:
           submodules: recursive
       - name: Build native code
+        uses: goto-bus-stop/setup-zig@v2
         run: |
           ./winarm64-xcompile-on-unix.sh
       - uses: actions/upload-artifact@v3
