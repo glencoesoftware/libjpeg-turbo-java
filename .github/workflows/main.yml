@@ -75,6 +75,28 @@ jobs:
           name: artifacts-macos-x86_64
           path: libjpeg-turbo/build/.libs/libturbojpeg.dylib
           if-no-files-found: error
+  build-linux-arm64:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Build native code
+        run: |
+          docker build -f Dockerfile_aarch64 . -t native_builder
+          docker run -v $(pwd):/build --user ${UID} -t native_builder /build/linux.sh
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: configure log
+          path: libjpeg-turbo/build/config.log
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts-linux-arm64
+          path: libjpeg-turbo/build/.libs/libturbojpeg.so
+          if-no-files-found: error
   build-linux-x86_64:
     runs-on: ubuntu-latest
     steps:
@@ -84,7 +106,7 @@ jobs:
           submodules: recursive
       - name: Build native code
         run: |
-          docker build -f Dockerfile2010 . -t native_builder
+          docker build -f Dockerfile_x86_64 . -t native_builder
           docker run -v $(pwd):/build --user ${UID} -t native_builder /build/linux.sh
       - uses: actions/upload-artifact@v4
         if: failure()
@@ -129,7 +151,7 @@ jobs:
           path: libjpeg-turbo/build/**/turbojpeg.dll
           if-no-files-found: error
   build-package:
-    needs: [build-macos-arm64, build-macos-x86_64, build-windows-x86_64, build-linux-x86_64]
+    needs: [build-macos-arm64, build-macos-x86_64, build-windows-x86_64, build-linux-arm64, build-linux-x86_64]
     runs-on: ubuntu-latest
     env:
       gradle_commands: --stacktrace clean jar
@@ -157,7 +179,7 @@ jobs:
     needs: build-package
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-15-intel, macos-latest]
+        os: [ubuntu-24.04-arm, ubuntu-latest, windows-latest, macos-15-intel, macos-latest]
     runs-on: ${{ matrix.os }}
     env:
       gradle_commands: --stacktrace clean jar
@@ -194,6 +216,7 @@ jobs:
           files: |
             artifacts-macos-arm64/*.dylib
             artifacts-macos-x86_64/*.dylib
+            artifacts-linux-arm64/*.so
             artifacts-linux-x86_64/*.so
             artifacts-windows-x86_64/Debug/*.dll
             libjpeg-turbo-java/*.jar
