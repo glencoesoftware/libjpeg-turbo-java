@@ -6,6 +6,41 @@ on:
   pull_request:
 
 jobs:
+  build-macos-arm64:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+      - name: Install build dependencies
+        run: brew install automake libtool nasm
+      - name: Build native code
+        run: |
+          export CPPFLAGS="-I${JAVA_HOME}/include -I${JAVA_HOME}/include/darwin"
+          export CXXFLAGS="-I${JAVA_HOME}/include -static-libstdc++"
+          cd libjpeg-turbo
+          autoreconf -fiv
+          mkdir build
+          cd build
+          ../configure --with-java
+          make
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: configure log
+          path: libjpeg-turbo/build/config.log
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts-macos-arm64
+          path: libjpeg-turbo/build/.libs/libturbojpeg.dylib
+          if-no-files-found: error
   build-macos-x86_64:
     runs-on: macos-15-intel
     steps:
@@ -94,7 +129,7 @@ jobs:
           path: libjpeg-turbo/build/**/turbojpeg.dll
           if-no-files-found: error
   build-package:
-    needs: [build-macos-x86_64, build-windows-x86_64, build-linux-x86_64]
+    needs: [build-macos-arm64, build-macos-x86_64, build-windows-x86_64, build-linux-x86_64]
     runs-on: ubuntu-latest
     env:
       gradle_commands: --stacktrace clean jar
@@ -122,7 +157,7 @@ jobs:
     needs: build-package
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-15-intel]
+        os: [ubuntu-latest, windows-latest, macos-15-intel, macos-latest]
     runs-on: ${{ matrix.os }}
     env:
       gradle_commands: --stacktrace clean jar
@@ -157,6 +192,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
+            artifacts-macos-arm64/*.dylib
             artifacts-macos-x86_64/*.dylib
             artifacts-linux-x86_64/*.so
             artifacts-windows-x86_64/Debug/*.dll

@@ -15,7 +15,7 @@ repositories {
 }
 
 dependencies {
-    testImplementation "org.scijava:native-lib-loader:2.1.4"
+    testImplementation "org.scijava:native-lib-loader:2.4.0"
     testRuntimeOnly "org.slf4j:slf4j-api:1.7.6"
 
     // https://github.com/junit-team/junit5-samples/blob/master/junit5-migration-gradle/build.gradle
