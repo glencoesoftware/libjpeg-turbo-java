@@ -10,11 +10,11 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout repository and submodules
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '11'
@@ -30,13 +30,13 @@ jobs:
           cd build
           ../configure --with-java
           make
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: configure log
           path: libjpeg-turbo/build/config.log
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: artifacts-macos-arm64
           path: libjpeg-turbo/build/.libs/libturbojpeg.dylib
@@ -45,11 +45,11 @@ jobs:
     runs-on: macos-15-intel
     steps:
       - name: Checkout repository and submodules
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '11'
@@ -64,13 +64,13 @@ jobs:
           cd build
           ../configure --with-java
           make
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: configure log
           path: libjpeg-turbo/build/config.log
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: artifacts-macos-x86_64
           path: libjpeg-turbo/build/.libs/libturbojpeg.dylib
@@ -79,20 +79,20 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - name: Checkout repository and submodules
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Build native code
         run: |
           docker build -f Dockerfile_aarch64 . -t native_builder
           docker run -v $(pwd):/build --user ${UID} -t native_builder /build/linux.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: configure log
           path: libjpeg-turbo/build/config.log
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: artifacts-linux-arm64
           path: libjpeg-turbo/build/.libs/libturbojpeg.so
@@ -101,20 +101,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository and submodules
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Build native code
         run: |
           docker build -f Dockerfile_x86_64 . -t native_builder
           docker run -v $(pwd):/build --user ${UID} -t native_builder /build/linux.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: configure log
           path: libjpeg-turbo/build/config.log
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: artifacts-linux-x86_64
           path: libjpeg-turbo/build/.libs/libturbojpeg.so
@@ -123,11 +123,11 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout repository and submodules
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '11'
@@ -145,7 +145,7 @@ jobs:
           cmake -DWITH_JAVA=ON ..
           cmake --build .
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: artifacts-windows-x86_64
           path: libjpeg-turbo/build/**/turbojpeg.dll
@@ -156,22 +156,22 @@ jobs:
     env:
       gradle_commands: --stacktrace clean jar
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
-          java-version: '8'
+          java-version: '17'
       - name: Run commands
         run: |
           ./gradlew ${{ env.gradle_commands }}
       - name: Download artifacts from build
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
       - name: List artifacts
         run: ls -R
       - name: Repack jar
         run: ./jar-pack.sh
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: libjpeg-turbo-java
           path: build/libs/*.jar
@@ -186,8 +186,8 @@ jobs:
       gradle_commands: --stacktrace clean jar
       test_commands: --stacktrace test
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
           java-version: '${{ matrix.java }}'
@@ -195,7 +195,7 @@ jobs:
         run: |
           ./gradlew ${{ env.gradle_commands }}
       - name: Download artifacts from build
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
       - name: Move packed jar to build dir
         run: rm build/libs/libjpeg-turbo*.jar; mv libjpeg-turbo-java/libjpeg-turbo*.jar build/libs/
       - name: Run tests
@@ -208,7 +208,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts from build
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
       - name: List artifacts
         run: ls -R
       - name: Release
