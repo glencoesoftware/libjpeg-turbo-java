@@ -212,12 +212,13 @@ jobs:
       - name: List artifacts
         run: ls -R
       - name: Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            artifacts-macos-arm64/*.dylib
-            artifacts-macos-x86_64/*.dylib
-            artifacts-linux-arm64/*.so
-            artifacts-linux-x86_64/*.so
-            artifacts-windows-x86_64/Debug/*.dll
-            libjpeg-turbo-java/*.jar
+        run: |
+          gh release create --generate-notes "${GITHUB_REF#refs/tags/}" \
+          artifacts-macos-arm64/*.dylib \
+          artifacts-macos-x86_64/*.dylib \
+          artifacts-linux-arm64/*.so \
+          artifacts-linux-x86_64/*.so \
+          artifacts-windows-x86_64/Debug/*.dll \
+          libjpeg-turbo-java/*.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
