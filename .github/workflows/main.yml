@@ -120,7 +120,7 @@ jobs:
           path: libjpeg-turbo/build/.libs/libturbojpeg.so
           if-no-files-found: error
   build-windows-x86_64:
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
       - name: Checkout repository and submodules
         uses: actions/checkout@v6
