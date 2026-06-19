@@ -1,5 +1,7 @@
 plugins {
-    id 'java'
+    id 'java-library'
+    id 'maven-publish'
+    id 'org.jreleaser' version '1.24.0'
 }
 
 group = 'com.glencoesoftware'
@@ -7,6 +9,11 @@ version = '0.1.0-SNAPSHOT'
 
 compileJava {
     options.release = 11
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
 }
 
 repositories {
@@ -36,7 +43,7 @@ jar {
             "Build-Jdk": "${System.properties['java.version']} (${System.properties['java.vendor']} ${System.properties['java.vm.version']})",
             "Built-By": System.properties['user.name'],
             "Built-On": new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()),
-            "Main-Class": "com.glencoesoftware.turbojpeg.TJ",
+            "Main-Class": "org.libjpegturbo.turbojpeg.TJ",
             "Implementation-Version": version,
             "Implementation-Build": "git rev-parse --verify HEAD".execute().getText().trim()
         )
@@ -49,4 +56,82 @@ test {
     classpath = files("${buildDir}/libs/libjpeg-turbo-java-${version}.jar") + classpath
 }
 
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'com.glencoesoftware'
+            artifactId = 'libjpeg-turbo'
 
+            from components.java
+
+            pom {
+                name = 'libjpeg-turbo'
+                description = 'JNI-based wrapper around the libjpeg-turbo library.'
+                url = 'https://github.com/glencoesoftware/libjpeg-turbo-java'
+                inceptionYear = '2022'
+                licenses {
+                    license {
+                        name = 'BSD 3-Clause "New" or "Revised" License'
+                        url = 'https://opensource.org/licenses/BSD-3-Clause'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'chris-allan'
+                        name = 'Chris Allan'
+                    }
+                    developer {
+                        id = 'melissalinkert'
+                        name = 'Melissa Linkert'
+                    }
+                    developer {
+                        id = 'sbesson'
+                        name = 'Sébastien Besson'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:https://github.com/glencoesoftware/libjpeg-turbo-java'
+                    developerConnection = 'scm:git:git@github.com:glencoesoftware/libjpeg-turbo-java'
+                    url = 'http://github.com/glencoesoftware/libjpeg-turbo-java'
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            url = layout.buildDirectory.dir('staging-deploy')
+        }
+    }
+}
+
+jreleaser {
+    signing {
+        pgp {
+            active = 'ALWAYS'
+            armored = true
+        }
+    }
+    deploy {
+        maven {
+            mavenCentral {
+                'release-deploy' {
+                    active = 'ALWAYS'
+                    url = 'https://central.sonatype.com/api/v1/publisher'
+                    stagingRepository('build/staging-deploy')
+                }
+            }
+            nexus2 {
+              'snapshot-deploy' {
+                active = 'SNAPSHOT'
+                snapshotUrl = 'https://central.sonatype.com/repository/maven-snapshots/'
+                applyMavenCentralRules = true
+                snapshotSupported = true
+                closeRepository = true
+                releaseRepository = true
+                stagingRepository('build/staging-deploy')
+            }
+        }
+    }
+  }
+}
