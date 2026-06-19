@@ -120,7 +120,7 @@ jobs:
           path: libjpeg-turbo/build/.libs/libturbojpeg.so
           if-no-files-found: error
   build-windows-x86_64:
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
       - name: Checkout repository and submodules
         uses: actions/checkout@v6
@@ -150,33 +150,8 @@ jobs:
           name: artifacts-windows-x86_64
           path: libjpeg-turbo/build/**/turbojpeg.dll
           if-no-files-found: error
-  build-package:
-    needs: [build-macos-arm64, build-macos-x86_64, build-windows-x86_64, build-linux-arm64, build-linux-x86_64]
-    runs-on: ubuntu-latest
-    env:
-      gradle_commands: --stacktrace clean jar
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-java@v5
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-      - name: Run commands
-        run: |
-          ./gradlew ${{ env.gradle_commands }}
-      - name: Download artifacts from build
-        uses: actions/download-artifact@v8
-      - name: List artifacts
-        run: ls -R
-      - name: Repack jar
-        run: ./jar-pack.sh
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v7
-        with:
-          name: libjpeg-turbo-java
-          path: build/libs/*.jar
   test:
-    needs: build-package
+    needs: [build-macos-arm64, build-macos-x86_64, build-windows-x86_64, build-linux-arm64, build-linux-x86_64]
     strategy:
       matrix:
         os: [ubuntu-24.04-arm, ubuntu-latest, windows-latest, macos-15-intel, macos-latest]
@@ -191,34 +166,59 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '${{ matrix.java }}'
-      - name: Run commands
-        run: |
-          ./gradlew ${{ env.gradle_commands }}
-      - name: Download artifacts from build
-        uses: actions/download-artifact@v8
-      - name: Move packed jar to build dir
-        run: rm build/libs/libjpeg-turbo*.jar; mv libjpeg-turbo-java/libjpeg-turbo*.jar build/libs/
-      - name: Run tests
-        run: |
-          ./gradlew ${{ env.test_commands }}
-
-  release:
-    if: startsWith(github.ref, 'refs/tags')
-    needs: [build-package]
-    runs-on: ubuntu-latest
-    steps:
       - name: Download artifacts from build
         uses: actions/download-artifact@v8
       - name: List artifacts
         run: ls -R
-      - name: Release
+      - name: Move pre-built binaries under resources
+        run: ./jar-pack.sh
+        shell: bash
+      - name: Run commands
         run: |
-          gh release create --generate-notes "${GITHUB_REF#refs/tags/}" \
-          artifacts-macos-arm64/*.dylib \
-          artifacts-macos-x86_64/*.dylib \
-          artifacts-linux-arm64/*.so \
-          artifacts-linux-x86_64/*.so \
-          artifacts-windows-x86_64/Debug/*.dll \
-          libjpeg-turbo-java/*.jar
+          ./gradlew ${{ env.gradle_commands }}
+      - name: Run tests
+        run: |
+          ./gradlew ${{ env.test_commands }}
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    env:
+      gradle_commands: --stacktrace clean jar
+      JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.JRELEASER_MAVENCENTRAL_USERNAME }}
+      JRELEASER_MAVENCENTRAL_TOKEN: ${{ secrets.JRELEASER_MAVENCENTRAL_TOKEN }}
+      JRELEASER_NEXUS2_USERNAME: ${{ secrets.JRELEASER_NEXUS2_USERNAME }}
+      JRELEASER_NEXUS2_TOKEN: ${{ secrets.JRELEASER_NEXUS2_TOKEN }}
+      JRELEASER_GPG_PASSPHRASE: ${{ secrets.JRELEASER_GPG_PASSPHRASE }}
+      JRELEASER_GPG_SECRET_KEY: ${{ secrets.JRELEASER_GPG_SECRET_KEY }}
+      JRELEASER_GPG_PUBLIC_KEY: ${{ secrets.JRELEASER_GPG_PUBLIC_KEY }}
+      JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+      - name: Download artifacts from build
+        uses: actions/download-artifact@v8
+      - name: List artifacts
+        run: ls -R
+      - name: Move pre-built binaries under resources
+        run: ./jar-pack.sh
+      - name: Run commands
+        run: |
+          ./gradlew ${{ env.gradle_commands }}
+      - name: Publish
+        if: github.event_name != 'pull_request'
+        run: |
+          ./gradlew publish jreleaserDeploy
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: libjpeg-turbo-java
+          path: build/libs/*.jar
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags')
+        run: |
+          gh release create --generate-notes "${GITHUB_REF#refs/tags/}" build/libs/*.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
