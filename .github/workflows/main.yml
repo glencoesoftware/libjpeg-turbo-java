@@ -184,6 +184,14 @@ jobs:
     runs-on: ubuntu-latest
     env:
       gradle_commands: --stacktrace clean jar
+      JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.JRELEASER_MAVENCENTRAL_USERNAME }}
+      JRELEASER_MAVENCENTRAL_TOKEN: ${{ secrets.JRELEASER_MAVENCENTRAL_TOKEN }}
+      JRELEASER_NEXUS2_USERNAME: ${{ secrets.JRELEASER_NEXUS2_USERNAME }}
+      JRELEASER_NEXUS2_TOKEN: ${{ secrets.JRELEASER_NEXUS2_TOKEN }}
+      JRELEASER_GPG_PASSPHRASE: ${{ secrets.JRELEASER_GPG_PASSPHRASE }}
+      JRELEASER_GPG_SECRET_KEY: ${{ secrets.JRELEASER_GPG_SECRET_KEY }}
+      JRELEASER_GPG_PUBLIC_KEY: ${{ secrets.JRELEASER_GPG_PUBLIC_KEY }}
+      JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -199,6 +207,10 @@ jobs:
       - name: Run commands
         run: |
           ./gradlew ${{ env.gradle_commands }}
+      - name: Publish
+        if: github.event_name != 'pull_request'
+        run: |
+          ./gradlew publish jreleaserDeploy
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
